@@ -2,11 +2,10 @@ import cv2, imutils
 
 
 class Drone:
-    def __init__(self, frameScale, videoInput=False):
+    def __init__(self, videoInput=False):
         self.video = None
         self.tracker = None
         self.objectLoc = []
-        self.frameScale = frameScale
         self.frameWidth = 0
         self.frameHeight = 0
         self.videoInput = videoInput
@@ -16,7 +15,7 @@ class Drone:
 
         if not self.videoInput:
             self.video = cv2.VideoCapture(
-                0)  # Camera selector 0 is the default camera. If you have more than 1 they are automatically ordered by your OS
+                1)  # Camera selector 0 is the default camera. If you have more than 1 they are automatically ordered by your OS
         else:  # for training
             self.video = cv2.VideoCapture('in.avi')
 
@@ -26,7 +25,7 @@ class Drone:
         print(self.frameHeight)
 
         _, frame = self.video.read()
-        frame = imutils.resize(frame, width=self.frameScale)
+        frame = imutils.resize(frame, width=int(self.frameWidth))
         self.objectLoc = cv2.selectROI('Target Selector', frame, False)
         self.tracker.init(frame, self.objectLoc)
 
@@ -35,7 +34,7 @@ class Drone:
 
         while self.video.isOpened():
             _, frame = self.video.read()
-            frame = imutils.resize(frame, width=self.frameScale)
+            frame = imutils.resize(frame, width=int(self.frameWidth))
             track_success, self.objectLoc = self.tracker.update(frame)
 
             if track_success:
@@ -62,5 +61,5 @@ class Drone:
                 (self.objectLoc[1] + (self.objectLoc[3]/2)) - self.frameHeight/2]
 
 
-drone = Drone(720)
+drone = Drone()
 drone.motionDetection()
