@@ -1,34 +1,52 @@
-import cv2 as cv
-import numpy as np
-from matplotlib import pyplot as plt
+import cv2, imutils
 
 
-def motionDetection():
-    cap = cv.VideoCapture(0)
-    ret, frame1 = cap.read()
-    ret, frame2 = cap.read()
-    while cap.isOpened():
-        diff = cv.absdiff(frame1, frame2)
-        diff_gray = cv.cvtColor(diff, cv.COLOR_BGR2GRAY)
-        blur = cv.GaussianBlur(diff_gray, (5, 5), 0)
-        _, thresh = cv.threshold(blur, 20, 255, cv.THRESH_BINARY)
-        dilated = cv.dilate(thresh, None, iterations=3)
-        contours, _ = cv.findContours(dilated, cv.RETR_TREE, cv.CHAIN_APPROX_SIMPLE)
+class Drone:
+    def __init__(self, frameScale):
+        self.objectLoc = []
+        self.frameScale = frameScale
+        self.frameWidth = 0
+        self.frameHeight = 0
 
-        for contour in contours:
-            (x, y, w, h) = cv.boundingRect(contour)
-            if cv.contourArea(contour) < 900:
-                continue
-            cv.rectangle(frame1, (x, y), (x + w, y + h), (0, 255, 0), 2)
-            cv.putText(frame1, "Movement Detected", (10, 20), cv.FONT_HERSHEY_PLAIN, 1, (255, 0, 0), 3)
-        cv.imshow("DroneView", frame1)
-        frame1 = frame2
-        ret, frame2 = cap.read()
-        if cv.waitKey(1) & 0xFF == ord('q'):
-            break
-    cap.release()
-    cv.destroyAllWindows()
+    def motionDetection(self):
+
+        tracker = cv2.TrackerCSRT_create()
+
+        video = cv2.VideoCapture(0)
+
+        self.frameWidth = video.get(cv2.CAP_PROP_FRAME_WIDTH)
+        self.frameHeight = video.get(cv2.CAP_PROP_FRAME_HEIGHT)
+        print(self.frameWidth)
+        print(self.frameHeight)
+
+        _, frame = video.read()
+        frame = imutils.resize(frame, width=self.frameScale)
+        self.objectLoc = cv2.selectROI('Target Selector', frame, False)
+        tracker.init(frame, self.objectLoc)
+
+        while video.isOpened():
+            _, frame = video.read()
+            frame = imutils.resize(frame, width=self.frameScale)
+            track_success, self.objectLoc = tracker.update(frame)
+
+            if track_success:
+                top_left = (int(self.objectLoc[0]), int(self.objectLoc[1]))
+                bottom_right = (int(self.objectLoc[0] + self.objectLoc[2]), int(self.objectLoc[1] + self.objectLoc[3]))
+                cv2.rectangle(frame, top_left, bottom_right, (0, 255, 0), 5)
+            cv2.imshow('DroneView', frame)
+            print(self.centerImg())
+
+            key = cv2.waitKey(1) & 0xff
+            if key == ord('q'):
+                break
+        video.release()
+        cv2.destroyAllWindows()
+
+    def centerImg(
+            self):  # used for gimbal pos gets the target area of the circle used to show how far off the gimbal is to the subject for optimal tracking
+        return [((int(self.objectLoc[0] + self.objectLoc[2])) / 2) - self.frameHeight / 2,
+                (int(self.objectLoc[1])) - (self.frameHeight / 2)]
 
 
-if __name__ == "__main__":
-    motionDetection()
+drone = Drone(720)
+drone.motionDetection()
