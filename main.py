@@ -25,13 +25,13 @@ class Drone:
         print(self.frameWidth)
         print(self.frameHeight)
 
-    def motionDetection(self):
-        self.setTracker()
-
         _, frame = self.video.read()
         frame = imutils.resize(frame, width=self.frameScale)
         self.objectLoc = cv2.selectROI('Target Selector', frame, False)
         self.tracker.init(frame, self.objectLoc)
+
+    def motionDetection(self):
+        self.setTracker()
 
         while self.video.isOpened():
             _, frame = self.video.read()
@@ -49,7 +49,9 @@ class Drone:
             if key == ord('q'):
                 break
             elif key == ord('r'):
-                self.tracker = cv2.TrackerCSRT_create()
+                self.video.release()
+                cv2.destroyAllWindows()
+                self.setTracker()
 
         self.video.release()
         cv2.destroyAllWindows()
