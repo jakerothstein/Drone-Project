@@ -14,8 +14,9 @@ class Drone:
         tracker = cv2.TrackerCSRT_create()
 
         if not self.videoInput:
-            video = cv2.VideoCapture(1)
-        else: # for training 
+            video = cv2.VideoCapture(
+                1)  # Camera selector 0 is the default camera. If you have more than 1 they are automatically ordered by your OS
+        else:  # for training
             video = cv2.VideoCapture('in.avi')
 
         self.frameWidth = video.get(cv2.CAP_PROP_FRAME_WIDTH)
