@@ -58,8 +58,8 @@ class Drone:
 
     def centerImg(
             self):  # used for gimbal pos gets the target area of the circle used to show how far off the gimbal is to the subject for optimal tracking
-        return [((int(self.objectLoc[0] + self.objectLoc[2])) / 2) - self.frameHeight / 2,
-                (int(self.objectLoc[1])) - (self.frameHeight / 2)]
+        return [(self.objectLoc[0] + (self.objectLoc[2]/2)) - self.frameWidth/2,
+                (self.objectLoc[1] + (self.objectLoc[3]/2)) - self.frameHeight/2]
 
 
 drone = Drone(720)
