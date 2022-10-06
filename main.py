@@ -2,17 +2,21 @@ import cv2, imutils
 
 
 class Drone:
-    def __init__(self, frameScale):
+    def __init__(self, frameScale, videoInput=False):
         self.objectLoc = []
         self.frameScale = frameScale
         self.frameWidth = 0
         self.frameHeight = 0
+        self.videoInput = videoInput
 
     def motionDetection(self):
 
         tracker = cv2.TrackerCSRT_create()
 
-        video = cv2.VideoCapture(0)
+        if not self.videoInput:
+            video = cv2.VideoCapture(1)
+        else: # for training 
+            video = cv2.VideoCapture('in.avi')
 
         self.frameWidth = video.get(cv2.CAP_PROP_FRAME_WIDTH)
         self.frameHeight = video.get(cv2.CAP_PROP_FRAME_HEIGHT)
