@@ -3,36 +3,40 @@ import cv2, imutils
 
 class Drone:
     def __init__(self, frameScale, videoInput=False):
+        self.video = None
+        self.tracker = None
         self.objectLoc = []
         self.frameScale = frameScale
         self.frameWidth = 0
         self.frameHeight = 0
         self.videoInput = videoInput
 
-    def motionDetection(self):
-
-        tracker = cv2.TrackerCSRT_create()
+    def setTracker(self):
+        self.tracker = cv2.TrackerCSRT_create()
 
         if not self.videoInput:
-            video = cv2.VideoCapture(
-                1)  # Camera selector 0 is the default camera. If you have more than 1 they are automatically ordered by your OS
+            self.video = cv2.VideoCapture(
+                0)  # Camera selector 0 is the default camera. If you have more than 1 they are automatically ordered by your OS
         else:  # for training
-            video = cv2.VideoCapture('in.avi')
+            self.video = cv2.VideoCapture('in.avi')
 
-        self.frameWidth = video.get(cv2.CAP_PROP_FRAME_WIDTH)
-        self.frameHeight = video.get(cv2.CAP_PROP_FRAME_HEIGHT)
+        self.frameWidth = self.video.get(cv2.CAP_PROP_FRAME_WIDTH)
+        self.frameHeight = self.video.get(cv2.CAP_PROP_FRAME_HEIGHT)
         print(self.frameWidth)
         print(self.frameHeight)
 
-        _, frame = video.read()
+    def motionDetection(self):
+        self.setTracker()
+
+        _, frame = self.video.read()
         frame = imutils.resize(frame, width=self.frameScale)
         self.objectLoc = cv2.selectROI('Target Selector', frame, False)
-        tracker.init(frame, self.objectLoc)
+        self.tracker.init(frame, self.objectLoc)
 
-        while video.isOpened():
-            _, frame = video.read()
+        while self.video.isOpened():
+            _, frame = self.video.read()
             frame = imutils.resize(frame, width=self.frameScale)
-            track_success, self.objectLoc = tracker.update(frame)
+            track_success, self.objectLoc = self.tracker.update(frame)
 
             if track_success:
                 top_left = (int(self.objectLoc[0]), int(self.objectLoc[1]))
@@ -44,7 +48,10 @@ class Drone:
             key = cv2.waitKey(1) & 0xff
             if key == ord('q'):
                 break
-        video.release()
+            elif key == ord('r'):
+                self.tracker = cv2.TrackerCSRT_create()
+
+        self.video.release()
         cv2.destroyAllWindows()
 
     def centerImg(
